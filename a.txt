@@ -1,0 +1,31 @@
+source ${ROS2_WS}/install/local_setup.bash; colcon build --packages-up-to builtin_interfaces
+colcon build --packages-up-to rosidl_generator_c
+
+
+/opt/ros2_ws/build/builtin_interfaces/msg/rcldotnet_time.h
+/opt/ros2_ws/build/builtin_interfaces/rosidl_generator_c/builtin_interfaces/msg/time.h
+/opt/dotnet_ws/build/builtin_interfaces/rosidl_generator_dotnet/builtin_interfaces/msg/time.h
+
+
+#include "builtin_interfaces/msg/detail/duration__struct.h"
+#include "builtin_interfaces/msg/detail/duration__functions.h"
+#include "builtin_interfaces/msg/detail/duration__type_support.h"
+
+
+
+
+rosidl_runtime_c/message_type_support_struct.h
+
+
+cd ..
+mkdir -p /opt/dotnet_ws/src
+cp /opt/dotnet/ros2_dotnet.repos /opt/dotnet_ws/ros2_dotnet.repos
+cd /opt/dotnet_ws
+vcs import src < ros2_dotnet.repos
+cp -r /opt/dotnet /opt/dotnet_ws/src/ros2_dotnet/ros2_dotnet
+source ${ROS2_WS}/install/local_setup.bash
+colcon build --packages-up-to builtin_interfaces
+
+
+source /opt/dotnet_ws/install/local_setup.sh
+ros2 run rcldotnet_examples rcldotnet_talker

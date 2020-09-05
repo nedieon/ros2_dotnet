@@ -179,6 +179,7 @@ if(_generated_c_ts_files)
   target_link_libraries(
     ${_target_name}
     ${PROJECT_NAME}__rosidl_typesupport_c
+    ${rosidl_generate_interfaces_TARGET}__rosidl_generator_c
     ${_extension_link_flags}
   )
   target_include_directories(${_target_name}

@@ -5,7 +5,7 @@ project(rosidl_generator_dotnet)
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_export_assemblies REQUIRED)
 find_package(ament_cmake_python REQUIRED)
-find_package(rosidl_generator_c REQUIRED)
+find_package(rosidl_runtime_c REQUIRED)
 
 find_package(rcldotnet_common REQUIRED)
 
