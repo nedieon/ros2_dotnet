@@ -27,19 +27,24 @@
 
 int32_t native_rcl_create_publisher_handle(void **publisher_handle,
                                            void *node_handle, const char *topic,
-                                           void *typesupport) {
+                                           void *qos_profile_handle,
+                                           void *typesupport_handle) {
   rcl_node_t *node = (rcl_node_t *)node_handle;
 
-  rosidl_message_type_support_t *ts =
-      (rosidl_message_type_support_t *)typesupport;
+  rosidl_message_type_support_t *typesupport =
+      (rosidl_message_type_support_t *)typesupport_handle;
 
   rcl_publisher_t *publisher =
       (rcl_publisher_t *)malloc(sizeof(rcl_publisher_t));
-  publisher->impl = NULL;
+  *publisher = rcl_get_zero_initialized_publisher();
+
   rcl_publisher_options_t publisher_ops = rcl_publisher_get_default_options();
 
+  rmw_qos_profile_t *qos_profile = (rmw_qos_profile_t *)qos_profile_handle;
+  publisher_ops.qos = *qos_profile;
+
   rcl_ret_t ret =
-      rcl_publisher_init(publisher, node, ts, topic, &publisher_ops);
+      rcl_publisher_init(publisher, node, typesupport, topic, &publisher_ops);
 
   *publisher_handle = (void *)publisher;
 
@@ -49,20 +54,25 @@ int32_t native_rcl_create_publisher_handle(void **publisher_handle,
 int32_t native_rcl_create_subscription_handle(void **subscription_handle,
                                               void *node_handle,
                                               const char *topic,
-                                              void *typesupport) {
+                                              void *qos_profile_handle,
+                                              void *typesupport_handle) {
   rcl_node_t *node = (rcl_node_t *)node_handle;
 
-  rosidl_message_type_support_t *ts =
-      (rosidl_message_type_support_t *)typesupport;
+  rosidl_message_type_support_t *typesupport =
+      (rosidl_message_type_support_t *)typesupport_handle;
 
   rcl_subscription_t *subscription =
       (rcl_subscription_t *)malloc(sizeof(rcl_subscription_t));
-  subscription->impl = NULL;
+  *subscription = rcl_get_zero_initialized_subscription();
+
   rcl_subscription_options_t subscription_ops =
       rcl_subscription_get_default_options();
 
+  rmw_qos_profile_t *qos_profile = (rmw_qos_profile_t *)qos_profile_handle;
+  subscription_ops.qos = *qos_profile;
+
   rcl_ret_t ret =
-      rcl_subscription_init(subscription, node, ts, topic, &subscription_ops);
+      rcl_subscription_init(subscription, node, typesupport, topic, &subscription_ops);
 
   *subscription_handle = (void *)subscription;
 

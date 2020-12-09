@@ -21,9 +21,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
 using ROS2.Common;
 using ROS2.Interfaces;
+using ROS2.QoS;
 using ROS2.Utils;
 
 namespace ROS2 {
@@ -32,13 +32,13 @@ namespace ROS2 {
 
     [UnmanagedFunctionPointer (CallingConvention.Cdecl)]
     internal delegate int NativeRCLCreatePublisherHandleType (
-      ref IntPtr publisherHandle, IntPtr nodeHandle, [MarshalAs (UnmanagedType.LPStr)] string nodeName, IntPtr typesupportHandle);
+      ref IntPtr publisherHandle, IntPtr nodeHandle, [MarshalAs (UnmanagedType.LPStr)] string nodeName, IntPtr qosProfileHandle, IntPtr typesupportHandle);
 
     internal static NativeRCLCreatePublisherHandleType native_rcl_create_publisher_handle = null;
 
     [UnmanagedFunctionPointer (CallingConvention.Cdecl)]
     internal delegate int NativeRCLCreateSubscriptionHandleType (
-      ref IntPtr subscriptionHandle, IntPtr nodeHandle, [MarshalAs (UnmanagedType.LPStr)] string nodeName, IntPtr typesupportHandle);
+      ref IntPtr subscriptionHandle, IntPtr nodeHandle, [MarshalAs (UnmanagedType.LPStr)] string nodeName, IntPtr qosProfileHandle, IntPtr typesupportHandle);
 
     internal static NativeRCLCreateSubscriptionHandleType native_rcl_create_subscription_handle = null;
 
@@ -76,21 +76,33 @@ namespace ROS2 {
     public IntPtr Handle { get; }
 
     public IPublisher<T> CreatePublisher<T> (string topic) where T : IMessage {
+      return CreatePublisher<T> (topic, QoSProfile.Default);
+    }
+
+    public IPublisher<T> CreatePublisher<T> (string topic, QoSProfile qosProfile) where T : IMessage {
       MethodInfo m = typeof (T).GetTypeInfo().GetDeclaredMethod ("_GET_TYPE_SUPPORT");
 
-      IntPtr typesupport = (IntPtr) m.Invoke (null, new object[] { });
+      IntPtr typesupportHandle = (IntPtr) m.Invoke (null, new object[] { });
       IntPtr publisherHandle = IntPtr.Zero;
-      RCLRet ret = (RCLRet) NodeDelegates.native_rcl_create_publisher_handle (ref publisherHandle, Handle, topic, typesupport);
+      IntPtr qosProfileHandle = RCLdotnet.ConvertQoSProfileToHandle (qosProfile);
+      RCLRet ret = (RCLRet) NodeDelegates.native_rcl_create_publisher_handle (ref publisherHandle, Handle, topic, qosProfileHandle, typesupportHandle);
+      RCLdotnet.DisposeQoSProfile (qosProfileHandle);
       Publisher<T> publisher = new Publisher<T> (publisherHandle);
       return publisher;
     }
 
     public ISubscription<T> CreateSubscription<T> (string topic, Action<T> callback) where T : IMessage, new () {
+      return CreateSubscription<T> (topic, callback, QoSProfile.Default);
+    }
+
+    public ISubscription<T> CreateSubscription<T> (string topic, Action<T> callback, QoSProfile qosProfile) where T : IMessage, new () {
       MethodInfo m = typeof (T).GetTypeInfo().GetDeclaredMethod ("_GET_TYPE_SUPPORT");
 
-      IntPtr typesupport = (IntPtr) m.Invoke (null, new object[] { });
+      IntPtr typesupportHandle = (IntPtr) m.Invoke (null, new object[] { });
       IntPtr subscriptionHandle = IntPtr.Zero;
-      RCLRet ret = (RCLRet) NodeDelegates.native_rcl_create_subscription_handle (ref subscriptionHandle, Handle, topic, typesupport);
+      IntPtr qosProfileHandle = RCLdotnet.ConvertQoSProfileToHandle (qosProfile);
+      RCLRet ret = (RCLRet) NodeDelegates.native_rcl_create_subscription_handle (ref subscriptionHandle, Handle, topic, qosProfileHandle, typesupportHandle);
+      RCLdotnet.DisposeQoSProfile (qosProfileHandle);
       Subscription<T> subscription = new Subscription<T> (subscriptionHandle, callback);
       this.subscriptions_.Add (subscription);
       return subscription;

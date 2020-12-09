@@ -20,9 +20,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
 using ROS2.Common;
 using ROS2.Interfaces;
+using ROS2.QoS;
 using ROS2.Utils;
 
 namespace ROS2 {
@@ -87,6 +87,17 @@ namespace ROS2 {
     internal delegate int NativeRCLTakeType (IntPtr subscriptionHandle, IntPtr messageHandle);
 
     internal static NativeRCLTakeType native_rcl_take = null;
+
+    [UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+    internal delegate void NativeConvertQoSProfileToHandleType (ref IntPtr qosProfileHandle,
+      int history, int depth, int reliability, int durability, bool avoidROSNamespaceConventions);
+
+    internal static NativeConvertQoSProfileToHandleType native_convert_qos_profile_to_handle = null;
+
+    [UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+    internal delegate void NativeDisposeQoSProfileType (IntPtr qosProfileHandle);
+
+    internal static NativeDisposeQoSProfileType native_dispose_qos_profile = null;
 
     static RCLdotnetDelegates () {
       dllLoadUtils = DllLoadUtilsFactory.GetDllLoadUtils ();
@@ -159,6 +170,18 @@ namespace ROS2 {
       RCLdotnetDelegates.native_rcl_take =
         (NativeRCLTakeType) Marshal.GetDelegateForFunctionPointer (
           native_rcl_take_ptr, typeof (NativeRCLTakeType));
+
+      IntPtr native_convert_qos_profile_to_handle_ptr =
+        dllLoadUtils.GetProcAddress (pDll, "native_convert_qos_profile_to_handle");
+      RCLdotnetDelegates.native_convert_qos_profile_to_handle =
+        (NativeConvertQoSProfileToHandleType) Marshal.GetDelegateForFunctionPointer (
+          native_convert_qos_profile_to_handle_ptr, typeof (NativeConvertQoSProfileToHandleType));
+
+      IntPtr native_dispose_qos_profile_ptr =
+        dllLoadUtils.GetProcAddress (pDll, "native_dispose_qos_profile");
+      RCLdotnetDelegates.native_dispose_qos_profile =
+        (NativeDisposeQoSProfileType) Marshal.GetDelegateForFunctionPointer (
+          native_dispose_qos_profile_ptr, typeof (NativeDisposeQoSProfileType));
     }
   }
 
@@ -292,6 +315,23 @@ namespace ROS2 {
       IntPtr ptr = RCLdotnetDelegates.native_rcl_get_rmw_identifier ();
       string rmw_identifier = Marshal.PtrToStringAnsi (ptr);
       return rmw_identifier;
+    }
+
+    public static IntPtr ConvertQoSProfileToHandle (QoSProfile qosProfile) {
+      int history = (int) qosProfile.History;
+      int depth = (int) qosProfile.Depth;
+      int reliability = (int) qosProfile.Reliability;
+      int durability = (int) qosProfile.Durability;
+      bool avoidROSNamespaceConventions = qosProfile.AvoidROSNamespaceConventions;
+
+      IntPtr qosProfileHandle = IntPtr.Zero;
+      RCLdotnetDelegates.native_convert_qos_profile_to_handle (
+        ref qosProfileHandle, history, depth, reliability, durability, avoidROSNamespaceConventions);
+      return qosProfileHandle;
+    }
+
+    public static void DisposeQoSProfile (IntPtr qosProfileHandle) {
+      RCLdotnetDelegates.native_dispose_qos_profile (qosProfileHandle);
     }
   }
 }

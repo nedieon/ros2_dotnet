@@ -32,6 +32,7 @@ set(CS_SOURCES
   ISubscriptionBase.cs
   Node.cs
   Publisher.cs
+  QoS.cs
   RCLdotnet.cs
   Subscription.cs
 )
